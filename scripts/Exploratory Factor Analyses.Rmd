@@ -1,0 +1,132 @@
+---
+title: "Exploratory Factor Analyses"
+author: "Alejandra Garcia Isaza"
+date: '2022-12-23'
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+library(rio)
+library(here)
+library(tidyverse)
+library(haven)
+library(janitor)
+library(knitr)
+library(surveytoolbox)
+library(sjPlot)
+library(kableExtra)
+library(psych)
+library(sjmisc)
+
+theme_set(theme_minimal())
+```
+
+
+# Loading the dataset (labels, 380 rows, 236 columns)
+```{r}
+d_labels <- import(here("nopublish", "SPSS-LabelsData 3.12.22.sav"), setclass = "tbl_df")
+
+d_labels %>%
+  arrange(RecordID) # column 97 starts with SDQ
+```
+
+# Loading the dataset (raw data, 380 rows, 144 columns (bec. only scales, no intro, no demo))
+```{r}
+d_raw <- import(here("nopublish", "1MdMMedicinCUIDADORE-AnlisisEscalas051222_DATA_2022-12-05_2032.csv"), setclass = "tbl_df")
+
+d1 <- d_raw %>% 
+  select(-2:-4)
+```
+
+
+```{r}
+describe(d1) # need to recode values 77 (no aplica), 98 (no estoy segura), 99 (prefiero no responder)
+```
+
+# recoding missing variables as N/A
+```{r include=FALSE}
+
+# vector with missing values in dataset
+missing_vals <- c(77, 98, 99)
+
+# function that returns true if values in vector are equal to missing_vals. The function takes a vector x, and specified values of missing data
+recode_missing <- function(x, missing_vals = c(77, 98, 99)) {
+  test <- x %in% missing_vals
+  ifelse(test, NA, x)
+}
+
+# function that recodes missing values to NA. The function takes a dataframe with variables with missing data, and specified values of missing data
+recode_missing_df <- function(df, missing_vals = c(77, 98, 99)) {
+  modify(df, ~recode_missing(.x, missing_vals)) # here uses the function created above
+}
+
+d2 <- recode_missing_df(d1) # the function strips out variable labels
+```
+
+```{r}
+describe(d2) # adequately recoded. 
+```
+
+# Data prep: reverse scoring negatively worded items
+```{r}
+d3 <- d2 %>%
+  mutate(sdq007_1 = likert_reverse(sdq007_1, top = 2, bottom = 0),
+         sdq011_1 = likert_reverse(sdq011_1, top = 2, bottom = 0),
+         sdq014_1 = likert_reverse(sdq014_1, top = 2, bottom = 0),
+         sdq021_1 = likert_reverse(sdq021_1, top = 2, bottom = 0),
+         sdq025_1 = likert_reverse(sdq025_1, top = 2, bottom = 0))
+```
+
+# SDQ
+```{r}
+# SDQ (25 items)
+sdq <- d3 %>%
+  select(sdq001_1:sdq025_1)
+
+# Poly corr matrix
+poly_sdq <- polychoric(sdq)
+poly_sdq_mat <- data.frame(poly_sdq$rho)
+
+# scree plot
+scree(poly_sdq_mat,factors=TRUE,pc=FALSE,main="Scree plot",hline=NULL,add=FALSE)
+
+# EFA
+fa(sdq, n.obs = NA, rotate = "none", fm = "uls", cor = "poly")
+```
+```{r}
+# PARALLEL ANALYSIS
+fa.parallel(sdq, n.obs=NULL, fm="uls", fa="fa", nfactors=1, main="Parallel Analysis Scree Plots", n.iter=20, error.bars=FALSE, se.bars=FALSE, SMC=FALSE, ylabel=NULL, show.legend=TRUE, sim=TRUE, quant=.95, cor="poly", use="pairwise", plot=TRUE, correct=.5) # suggest 4 factors
+
+# 4 factors
+fa(sdq, nfactors = 4, n.obs = NA, rotate = "quartimin", fm = "uls", cor = "poly")
+```
+items 1, 2, 4, 15, 25 is factor 4
+
+
+# SDQ withoutout prosocial scale
+```{r}
+# SDQ (25 items)
+sdq_2 <- d3 %>%
+  select(sdq001_1:sdq025_1) %>%
+  select(-sdq001_1, -sdq004_1, -sdq009_1, -sdq017_1, -sdq020_1)
+
+# Poly corr matrix
+poly_sdq_2 <- polychoric(sdq_2)
+poly_sdq_2_mat <- data.frame(poly_sdq_2$rho)
+
+# scree plot
+scree(poly_sdq_2_mat,factors=TRUE,pc=FALSE,main="Scree plot",hline=NULL,add=FALSE)
+
+# EFA
+fa(sdq_2, n.obs = NA, rotate = "none", fm = "uls", cor = "poly")
+```
+
+```{r}
+# PARALLEL ANALYSIS - without prosocial scale
+fa.parallel(sdq_2, n.obs=NULL, fm="uls", fa="fa", nfactors=1, main="Parallel Analysis Scree Plots", n.iter=20, error.bars=FALSE, se.bars=FALSE, SMC=FALSE, ylabel=NULL, show.legend=TRUE, sim=TRUE, quant=.95, cor="poly", use="pairwise", plot=TRUE, correct=.5) # suggest 5 factors
+
+# 4 factors
+fa(sdq_2, nfactors = 4, n.obs = NA, rotate = "quartimin", fm = "uls", cor = "poly")
+```

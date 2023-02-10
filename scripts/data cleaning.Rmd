@@ -5,6 +5,24 @@ date: '2022-09-09'
 output: html_document
 ---
 
+Datasets on Box folder dated 03.12.22
+
+1MdMMedicinCUIDADORE-AnlisisSPSS03122022_DATA_NOHDRS_2022-12-04_1816.csv -> 238 columnas, 380 filas. Columnas no tienen rotulos de la encuesta, solo V1 - v238
+
+SPSS-RawData Cuidadores 3.12.22.sav -> 243 columnas (pq?), 380 filas. Columnas no tienen rotulos de la encuesta, solo V1 - v238. Muy parecido al anterior, pero si hay algunos datos que difieren. 
+
+Base de datos-cuidadores 03.11.22.xlsx -> 236 columnas, 72 filas. Columnas con nombre correcto.
+
+----
+1MdMMedicinCUIDADORE-Descarga010523_DATA_2023-01-05_2211.csv  --> last data download by me 01.05.23
+---
+Feb 10, 23
+
+Análisis escalas-Cuidadores 03.12.22.sav --> 142 columnas, 380 filas. Columnas con nombre de las escalas.
+
+Análisis escalaslabels-Cuidadores 03.12.22.sav --> 143 columnas, 376 filas (pq JAA quitó filas con missing data). Columnas con nombre de las escalas.
+
+
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 
